@@ -27,7 +27,7 @@
 #define ARGS_SIZE 64
 #define PROMPT '$'
 
-#define DEBUGN1
+//#define DEBUGN1
 
 void imprimir_prompt(){
     //current working direcctory
@@ -113,11 +113,11 @@ int parse_args(char** args, char* linea){
 			#endif
 			return contador_tokens;
 		}
-		args[contador_tokens] = token;//Almacenamos los tokens en args
+		args[contador_tokens] = token;//Almacena el token en args
 		#ifdef DEBUGN1
 			print_token_debugN1(contador_tokens, token);
 		#endif
-		token = strtok(NULL, delimitadores);
+		token = strtok(NULL, delimitadores);//Siguiente token
 		contador_tokens += 1;	
 	}
 	
@@ -131,7 +131,6 @@ int parse_args(char** args, char* linea){
 int execute_line(char* line){
 	char *args[ARGS_SIZE];
 	int num_args = parse_args(args, line);
-	printf("numeor de args:%d\n", num_args);
 	if(num_args > 0){
 		if(strcmp(args[0], "cd") == 0){
 			printf("[internal_cd()→Cambia de directorio]\n");
