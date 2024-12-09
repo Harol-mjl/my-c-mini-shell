@@ -48,69 +48,91 @@ void imprimir_prompt(){
     }
 }
 
-void change_new_line_for_null(char* line){
+void replace_newline_to_null(char* line){
     size_t len_line = strlen(line);
-    if(len_line>0 && line[len_line-1] == '\n'){
+    if(len_line > 0 && line[len_line - 1] == '\n'){
         line[len_line - 1] = '\0';
     }
 }
 
 char *read_line(char* line){
 	imprimir_prompt();
-	if(fgets(line, COMMAND_LINE_SIZE, stdin) != NULL){
-        change_new_line_for_null(line);
-        return line;
-	}else{
-		if(feof(stdin)){
-			printf("\rAdios, hasta luego!\n");
-			exit(0);
-		}else{
-			perror("feof()");
-		    return NULL;
-		}
+	if (fgets(line, COMMAND_LINE_SIZE, stdin) == NULL){
+        if (feof(stdin)){// Detectamos el (Control + D)
+            printf("\nAdios, hasta luego!\n");
+            exit(0);
+        } else {
+            perror("feof()");
+            return NULL;
+        }
+	}
+    replace_newline_to_null(line);
+    return line;
+}
+
+void print_token_debugN1(int contador_tokens, char *token){
+	fprintf(
+			stderr,
+			GRIS_T"[parse_args()->token %d: %s]\n",
+			contador_tokens,
+			token
+			);
+}
+
+void print_token_corregido_debugN1(int contador_tokens, char *token){
+	fprintf(
+			stderr,
+			GRIS_T"[parse_args()->token %d corregido: %s]\n",
+			contador_tokens,
+			token
+			);
+}
+
+
+int is_commentary(int contador_tokens, char *token){
+	if(token[0] == '#'){
+		#ifdef DEBUGN1
+			print_token_debugN1(contador_tokens, token);
+		#endif
+		return 0;
+	} else {
+		return 1;
 	}
 }
 
-int parse_args(char** args,char* linea){
+int parse_args(char** args, char* linea){
 	char *delimitadores = " \r\t\n";
-	char *token = strtok(linea,delimitadores);
+	char *token = strtok(linea, delimitadores);
 	int contador_tokens = 0;
-	bool corregir = false;
+	
 	while(token != NULL){
-		args[contador_tokens]= token;
-		#ifdef DEBUGN1
-		fprintf(stderr,
-		GRIS_T"[parse_args()->token %d: %s]\n",
-        contador_tokens,
-		args[contador_tokens]);
-		#endif
-		if(args[contador_tokens][0] == '#'){
-			corregir = true;
-			break;
+		if(is_commentary(contador_tokens, token) == 0){
+			args[contador_tokens] = NULL;
+			#ifdef DEBUGN1
+				print_token_corregido_debugN1(contador_tokens, args[contador_tokens]);
+			#endif
+			return contador_tokens;
 		}
-		contador_tokens += 1;
+		args[contador_tokens] = token;//Almacenamos los tokens en args
+		#ifdef DEBUGN1
+			print_token_debugN1(contador_tokens, token);
+		#endif
 		token = strtok(NULL, delimitadores);
+		contador_tokens += 1;	
 	}
+	
 	args[contador_tokens] = NULL;
 	#ifdef DEBUGN1
-	if(corregir){
-		fprintf(stderr,
-		GRIS_T"[parse_args()->token %d corregido: %s]\n",
-		contador_tokens,
-		args[contador_tokens]);
-	}else{
-		fprintf(stderr,
-		GRIS_T"[parse_args()->token %d: %s]\n",
-		contador_tokens,
-		args[contador_tokens]);
-	}
+		print_token_debugN1(contador_tokens, token);
 	#endif
 	return contador_tokens;
 }
 
 int execute_line(char* line){
 	char *args[ARGS_SIZE];
-	if((parse_args(args, line) > 0)){
+	int num_args = parse_args(args, line);
+	printf("numeor de args:%d\n", num_args);
+	if(num_args > 0){
 		if(strcmp(args[0], "cd") == 0){
 			printf("[internal_cd()→Cambia de directorio]\n");
 			return 1;
