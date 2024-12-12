@@ -27,7 +27,11 @@
 #define ARGS_SIZE 64
 #define PROMPT '$'
 
-//#define DEBUGN1
+#define FALSE 0
+#define TRUE 1
+#define ERROR -1
+
+#define DEBUGN1
 
 void imprimir_prompt(){
     //current working direcctory
@@ -70,33 +74,32 @@ char *read_line(char* line){
     return line;
 }
 
-void print_token_debugN1(int contador_tokens, char *token){
-	fprintf(
-			stderr,
-			GRIS_T"[parse_args()->token %d: %s]\n",
-			contador_tokens,
-			token
-			);
+void print_token_debugN1(int contador_tokens, char *token, bool corregido){
+	#ifdef DEBUGN1
+		if (!corregido){
+			fprintf(
+					stderr,
+					GRIS_T"[parse_args()-> token %d: %s]\n",
+					contador_tokens,
+					token
+					);
+		} else {
+			fprintf(
+					stderr,
+					GRIS_T"[parse_args()-> token %d corregido: %s]\n",
+					contador_tokens,
+					token
+					);
+		}
+	#endif
 }
-
-void print_token_corregido_debugN1(int contador_tokens, char *token){
-	fprintf(
-			stderr,
-			GRIS_T"[parse_args()->token %d corregido: %s]\n",
-			contador_tokens,
-			token
-			);
-}
-
 
 int is_commentary(int contador_tokens, char *token){
 	if(token[0] == '#'){
-		#ifdef DEBUGN1
-			print_token_debugN1(contador_tokens, token);
-		#endif
-		return 0;
+		print_token_debugN1(contador_tokens, token, false);
+		return TRUE;
 	} else {
-		return 1;
+		return FALSE;
 	}
 }
 
@@ -106,25 +109,19 @@ int parse_args(char** args, char* linea){
 	int contador_tokens = 0;
 	
 	while(token != NULL){
-		if(is_commentary(contador_tokens, token) == 0){
+		if(is_commentary(contador_tokens, token) == 1){
 			args[contador_tokens] = NULL;
-			#ifdef DEBUGN1
-				print_token_corregido_debugN1(contador_tokens, args[contador_tokens]);
-			#endif
+			print_token_debugN1(contador_tokens, args[contador_tokens], true);
 			return contador_tokens;
 		}
 		args[contador_tokens] = token;//Almacena el token en args
-		#ifdef DEBUGN1
-			print_token_debugN1(contador_tokens, token);
-		#endif
+		print_token_debugN1(contador_tokens, token, false);
 		token = strtok(NULL, delimitadores);//Siguiente token
 		contador_tokens += 1;	
 	}
 	
 	args[contador_tokens] = NULL;
-	#ifdef DEBUGN1
-		print_token_debugN1(contador_tokens, token);
-	#endif
+	print_token_debugN1(contador_tokens, token, false);
 	return contador_tokens;
 }
 
